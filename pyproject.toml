@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "interview-eval"
+version = "0.1.0"
+description = ""
+authors = ["Scott Suk <scottsuk0306@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain = "^0.2.5"
+openai = "^1.35.3"
+python-dotenv = "^1.0.1"
+langchain-openai = "^0.1.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
