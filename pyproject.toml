@@ -11,6 +11,8 @@ langchain = "^0.2.5"
 openai = "^1.35.3"
 python-dotenv = "^1.0.1"
 langchain-openai = "^0.1.9"
+black = "^24.4.2"
+isort = "^5.13.2"
 
 
 [build-system]

@@ -1,7 +1,9 @@
 from typing import List
-from langchain.schema import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
+
 from dotenv import load_dotenv
+from langchain.schema import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+
 
 class DialogueAgent:
     def __init__(
@@ -31,12 +33,9 @@ class DialogueAgent:
     def receive(self, name: str, message: str) -> None:
         self.message_history.append(f"{name}: {message}")
 
+
 class DialogueSimulator:
-    def __init__(
-        self,
-        agents: List[DialogueAgent],
-        selection_function
-    ) -> None:
+    def __init__(self, agents: List[DialogueAgent], selection_function) -> None:
         self.agents = agents
         self._step = 0
         self.select_next_speaker = selection_function
@@ -54,15 +53,17 @@ class DialogueSimulator:
         speaker_idx = self.select_next_speaker(self._step, self.agents)
         speaker = self.agents[speaker_idx]
         message = speaker.send()
-        
+
         for receiver in self.agents:
             receiver.receive(speaker.name, message)
-        
+
         self._step += 1
         return speaker.name, message
 
+
 def select_next_speaker(step: int, agents: List[DialogueAgent]) -> int:
     return step % len(agents)
+
 
 def generate_agent_description(name):
     agent_descriptor_system_message = SystemMessage(
@@ -81,6 +82,7 @@ def generate_agent_description(name):
     agent_description = ChatOpenAI(temperature=1.0)(agent_specifier_prompt).content
     return agent_description
 
+
 def generate_system_message(name, description):
     return f"""{conversation_description}
     
@@ -95,9 +97,10 @@ Do not add anything else.
 Stop speaking the moment you finish speaking from your perspective.
 """
 
+
 if __name__ == "__main__":
     load_dotenv()
-    
+
     names = ["AI accelerationist", "AI alarmist"]
     topic = "The current impact of automation and artificial intelligence on employment"
     word_limit = 50
