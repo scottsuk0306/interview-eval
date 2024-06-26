@@ -3,6 +3,13 @@ from typing import List
 from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from prompt import (
+    AGENT_DESCRIPTOR_SYSTEM_MESSAGE,
+    AGENT_SPECIFIER_PROMPT_TEMPLATE,
+    SYSTEM_MESSAGE_TEMPLATE,
+    TOPIC_SPECIFIER_SYSTEM_MESSAGE,
+    TOPIC_SPECIFIER_PROMPT_TEMPLATE,
+)
 
 
 class DialogueAgent:
@@ -65,38 +72,29 @@ def select_next_speaker(step: int, agents: List[DialogueAgent]) -> int:
     return step % len(agents)
 
 
-def generate_agent_description(name):
+def generate_agent_description(name, conversation_description, word_limit):
     agent_descriptor_system_message = SystemMessage(
-        content="You can add detail to the description of the conversation participant."
+        content=AGENT_DESCRIPTOR_SYSTEM_MESSAGE
     )
     agent_specifier_prompt = [
         agent_descriptor_system_message,
         HumanMessage(
-            content=f"""{conversation_description}
-            Please reply with a creative description of {name}, in {word_limit} words or less. 
-            Speak directly to {name}.
-            Give them a point of view.
-            Do not add anything else."""
+            content=AGENT_SPECIFIER_PROMPT_TEMPLATE.format(
+                conversation_description=conversation_description,
+                name=name,
+                word_limit=word_limit
+            )
         ),
     ]
-    agent_description = ChatOpenAI(temperature=1.0)(agent_specifier_prompt).content
+    agent_description = ChatOpenAI(temperature=1.0).invoke(agent_specifier_prompt).content
     return agent_description
 
-
-def generate_system_message(name, description):
-    return f"""{conversation_description}
-    
-Your name is {name}.
-
-Your description is as follows: {description}
-
-Your goal is to persuade your conversation partner of your point of view.
-
-Do not add anything else.
-
-Stop speaking the moment you finish speaking from your perspective.
-"""
-
+def generate_system_message(name, description, conversation_description):
+    return SYSTEM_MESSAGE_TEMPLATE.format(
+        conversation_description=conversation_description,
+        name=name,
+        description=description
+    )
 
 if __name__ == "__main__":
     load_dotenv()
@@ -108,10 +106,13 @@ if __name__ == "__main__":
     conversation_description = f"""Here is the topic of conversation: {topic}
 The participants are: {', '.join(names)}"""
 
-    agent_descriptions = {name: generate_agent_description(name) for name in names}
+    agent_descriptions = {
+        name: generate_agent_description(name, conversation_description, word_limit) 
+        for name in names
+    }
 
     agent_system_messages = {
-        name: generate_system_message(name, description)
+        name: generate_system_message(name, description, conversation_description)
         for name, description in agent_descriptions.items()
     }
 
@@ -125,18 +126,16 @@ The participants are: {', '.join(names)}"""
     ]
 
     topic_specifier_prompt = [
-        SystemMessage(content="You can make a topic more specific."),
+        SystemMessage(content=TOPIC_SPECIFIER_SYSTEM_MESSAGE),
         HumanMessage(
-            content=f"""{topic}
-            
-            You are the moderator.
-            Please make the topic more specific.
-            Please reply with the specified quest in {word_limit} words or less. 
-            Speak directly to the participants: {*names,}.
-            Do not add anything else."""
+            content=TOPIC_SPECIFIER_PROMPT_TEMPLATE.format(
+                topic=topic,
+                word_limit=word_limit,
+                names=", ".join(names)
+            )
         ),
     ]
-    specified_topic = ChatOpenAI(temperature=1.0)(topic_specifier_prompt).content
+    specified_topic = ChatOpenAI(temperature=1.0).invoke(topic_specifier_prompt).content
 
     max_iters = 6
     simulator = DialogueSimulator(agents=agents, selection_function=select_next_speaker)
