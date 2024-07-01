@@ -104,10 +104,9 @@ python main.py
 ## Project Structure
 
 - `main.py`: The main script that sets up and runs the dialogue simulation.
-- `core.py`: Contains the base `DialogueAgent` and `DialogueSimulator` classes.
-- `evaluator_agent.py`: Implements the `EvaluatorAgent` class with state-based behavior.
-- `eval_prompt.py`: Contains prompts and templates for the evaluation scenario.
-- `requirements.txt`: List of Python package dependencies.
+- `src/dialogue.py`: Contains the base `DialogueAgent` and `DialogueSimulator` classes.
+- `interview.py`: Implements the `EvaluatorAgent` class with state-based behavior.
+- `src/prompt.py`: Contains prompts and templates for the evaluation scenario.
 
 ## Contributing
 
