@@ -1,22 +1,21 @@
-from main import DialogueAgent, DialogueSimulator, select_next_speaker
+from typing import List
+
+from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from typing import List
-from dotenv import load_dotenv
 
-from prompt import (
+from src.prompt import (
     AGENT_DESCRIPTOR_SYSTEM_MESSAGE,
     AGENT_SPECIFIER_PROMPT_TEMPLATE,
     SYSTEM_MESSAGE_TEMPLATE,
-    TOPIC_SPECIFIER_SYSTEM_MESSAGE,
     TOPIC_SPECIFIER_PROMPT_TEMPLATE,
+    TOPIC_SPECIFIER_SYSTEM_MESSAGE,
 )
+from src.dialogue import DialogueAgent, DialogueSimulator, select_next_speaker
 
 
 class EvaluatorAgent(DialogueAgent):
-    def __init__(
-        self, name: str, system_message: SystemMessage, model: ChatOpenAI
-    ) -> None:
+    def __init__(self, name: str, system_message: SystemMessage, model: ChatOpenAI) -> None:
         super().__init__(name, system_message, model)
         self.state = "Exploration"  # Initial state
 
@@ -25,10 +24,7 @@ class EvaluatorAgent(DialogueAgent):
         message = self.model.invoke(
             [
                 self.system_message,
-                HumanMessage(
-                    content=state_prompt
-                    + "\n".join(self.message_history + [self.prefix])
-                ),
+                HumanMessage(content=state_prompt + "\n".join(self.message_history + [self.prefix])),
             ]
         )
         return message.content
@@ -59,9 +55,7 @@ def generate_agent_description(name, conversation_description, word_limit):
             )
         ),
     ]
-    agent_description = (
-        ChatOpenAI(temperature=1.0).invoke(agent_specifier_prompt).content
-    )
+    agent_description = ChatOpenAI(temperature=1.0).invoke(agent_specifier_prompt).content
     return agent_description
 
 
@@ -84,8 +78,7 @@ if __name__ == "__main__":
 The participants are: {', '.join(names)}"""
 
     agent_descriptions = {
-        name: generate_agent_description(name, conversation_description, word_limit)
-        for name in names
+        name: generate_agent_description(name, conversation_description, word_limit) for name in names
     }
 
     agent_system_messages = {
@@ -112,9 +105,7 @@ The participants are: {', '.join(names)}"""
     topic_specifier_prompt = [
         SystemMessage(content=TOPIC_SPECIFIER_SYSTEM_MESSAGE),
         HumanMessage(
-            content=TOPIC_SPECIFIER_PROMPT_TEMPLATE.format(
-                topic=topic, word_limit=word_limit, names=", ".join(names)
-            )
+            content=TOPIC_SPECIFIER_PROMPT_TEMPLATE.format(topic=topic, word_limit=word_limit, names=", ".join(names))
         ),
     ]
     specified_topic = ChatOpenAI(temperature=1.0).invoke(topic_specifier_prompt).content
