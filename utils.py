@@ -4,6 +4,12 @@ def extract_json(text):
     # Define the regex pattern to extract the JSON part
     pattern = r'\{[^{}]*\}'
     match = re.findall(pattern, text)
+    try : 
+        output = eval(text)
+        return output
+    except:
+        pass
+    
     try :
         output = json.loads(re.sub(r"(?<=\{|\s)'|(?<=\s|:)'|(?<=\d)'(?!:)|'(?=\s|,|}|:)", '"',match[0]))
     except:
