@@ -32,6 +32,7 @@ class EvaluatorAgent:
         self.state = "UNC"  # Initial state, [UNC, EXP,INS,ACT]
         self.prev_state = "UNC"
         self.solution = solution
+        self.ins_cnt = 0
     def reset(self):
         self.message_history = ["Here is the conversation so far."]
 
@@ -59,6 +60,10 @@ class EvaluatorAgent:
             return message['answer']
 
         elif self.state == "INS":
+            if self.ins_cnt == 5:
+                self.transition_state("FIN")
+                return "I think the question is difficult to you. Let's change the question"
+            self.ins_cnt += 1
             message = extract_json(message.content)
             if message['status'].lower() == "true":
                 self.transition_state("FIN")
@@ -156,6 +161,9 @@ The participants are: {', '.join(names)}"""
     simulator.reset()
     # simulator.inject("Moderator", specified_topic)
     # print(f"(Moderator): {specified_topic}\n")
+    state_all = None
+    while state_all == "FIN":
+    
     for _ in range(max_iters):
         name, message = simulator.step()
         print(f"({name}): {message}\n")

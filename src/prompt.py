@@ -33,7 +33,7 @@ Do not add anything else."""
 
 EVALUATOR_STATE_ACTION_PROMPT_TEMPLATE = """You are an expert tasked with evaluating and providing feedback on an assistant's performance.
 --- 
-Your response should contain the correctness, whether it is correct or wrong with [True/False] and the feedback.  Rather than giving away the solution, details about the answer, or telling which step is incorrect, Encourage them to solve once more. When you give the feedback, refer the solution. The models' output must be same with the answer. 
+Your response should contain the correctness as "status", whether it is correct or wrong with [True/False] and the feedback.  Rather than giving away the solution, details about the answer, or telling which step is incorrect, Encourage them to solve once more. When you give the feedback, refer the solution. The models' output must be same with the answer. 
 ---
 Here are examples. Please follow the format as the following expert acts.
 {output_example}
@@ -139,12 +139,12 @@ Evalautor : {"answer" : "The recharging rate is 1 percentage-point of charge per
             deleted_information=solution['deleted_information'],
             Dialogue_History=message_history)
     elif state == "INS":
-        output_examples = '''{"correctness" : "True",
-"Feedback" : "This is GOOD. You have got the solution!"}
-{"correctness" : "False",
-"Feedback" : "Your answer is incorrect. Think step by step and retry"}
-{"correctness" : "False",
-"Feedback" : "Your approach is good, but you should get the final number as a output."}'''
+        output_examples = '''{"status" : "True",
+"feedback" : "This is GOOD. You have got the solution!"}
+{"status" : "False",
+"feedback" : "Your answer is incorrect. Think step by step and retry"}
+{"status" : "False",
+"feedback" : "Your approach is good, but you should get the final number as a output."}'''
         prompt =     EVALUATOR_STATE_ACTION_PROMPT_TEMPLATE_STEM_LONG.format(
             output_example = output_examples, 
             question=solution['initial_question'],
@@ -153,10 +153,10 @@ Evalautor : {"answer" : "The recharging rate is 1 percentage-point of charge per
             model_output=message_history,
         )    
     elif state == "ACT":
-        output_examples = '''Expert feedback: {"correctness" : True,
-"Feedback" : This is GOOD. You have got the solution!}
-{"correctness" : False,
-"Feedback" : Your answer is incorrect. Think step by step and retry}'''
+        output_examples = '''Expert feedback: {"status" : True,
+"feedback" : This is GOOD. You have got the solution!}
+{"status" : False,
+"feedback" : Your answer is incorrect. Think step by step and retry}'''
         prompt =     EVALUATOR_STATE_ACTION_PROMPT_TEMPLATE_STEM_LONG.format(
             output_example = output_examples, 
             question=solution['initial_question'],
