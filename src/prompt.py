@@ -125,7 +125,7 @@ Question: {initial_question}'''
 def PromptGenerator(state,solution,message_history):
     if state == 'UNC':
         output_examples = '''{"revised_question" : "The cell-phone recharges at a certain rate. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.","deleted_information" : "cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes."}'''
-        prompt = EVALUATOR_STATE_UNCLARIFYING_PROMPT_TEMPLATE.format( output_example = output_examples, question=solution['initial_question'])
+        prompt = EVALUATOR_STATE_UNCLARIFYING_PROMPT_TEMPLATE.format( output_example = output_examples, question=solution['initial_question'].replace('{','').replace('}','').replace('"',"'"))
              
     elif state == 'EXP':
         output_examples = '''initial_question : cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.

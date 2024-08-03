@@ -15,6 +15,9 @@ from src.prompt import (
 from src.dialogue import DialogueAgent, DialogueSimulator, select_next_speaker
 from utils import extract_json
 from src.prompt import PromptGenerator
+from src.temp_data import (
+    MATH_GEO_HARD,MATH_GEO_LOW,MATH_GEO_MIDDLE
+)
 
 class EvaluatorAgent:
     def __init__(
@@ -22,7 +25,6 @@ class EvaluatorAgent:
         name: str,
         system_message: SystemMessage,
         model: ChatOpenAI,
-        solution : dict
     ) -> None:
         self.name = name
         self.system_message = system_message
@@ -31,21 +33,25 @@ class EvaluatorAgent:
         self.reset()
         self.state = "UNC"  # Initial state, [UNC, EXP,INS,ACT]
         self.prev_state = "UNC"
-        self.solution = solution
         self.ins_cnt = 0
     def reset(self):
         self.message_history = ["Here is the conversation so far."]
 
     def send(self) -> str:
         state_prompt = f"Current state: {self.state}\n"
-        prompt = PromptGenerator(self.state,self.solution,self.message_history)
-        message = self.model.invoke(
-            [
-                self.system_message,
-                HumanMessage(content=prompt + "\n".join(self.message_history + [self.prefix])),
-            ]
-        )
+        try:
+            prompt = PromptGenerator(self.state,self.solution,self.message_history)
+           # print('**prompt**\n',prompt)
+        except:
+            import pdb;pdb.set_trace()
+
         if self.state == "UNC":
+            message = self.model.invoke(
+                [
+                    self.system_message,
+                    HumanMessage(content=prompt),
+                ]
+            )
             new_prob = extract_json(message.content)
             
             self.solution['revised_question'] = new_prob['revised_question'] 
@@ -54,19 +60,35 @@ class EvaluatorAgent:
             return EVALUATEE_STATE_EXP_PROMPT_TEMPLATE.format(initial_question = self.solution['revised_question']) 
 
         elif self.state == "EXP":
+            message = self.model.invoke(
+                [
+                    self.system_message,
+                    HumanMessage(content=prompt + "\n".join(self.message_history + [self.prefix])),
+                ]
+            )
             message = extract_json(message.content)
             if message['status'].lower() == "complete":
                 self.transition_state("INS")
             return message['answer']
 
         elif self.state == "INS":
+            message = self.model.invoke(
+                [
+                    self.system_message,
+                    HumanMessage(content=prompt + "\n".join(self.message_history + [self.prefix])),
+                ]
+            )
             if self.ins_cnt == 5:
                 self.transition_state("FIN")
+                self.status = False
+                self.ins_cnt = 0
                 return "I think the question is difficult to you. Let's change the question"
             self.ins_cnt += 1
             message = extract_json(message.content)
             if message['status'].lower() == "true":
+                self.status = True
                 self.transition_state("FIN")
+                self.ins_cnt = 0
             return message['feedback']
 
     def receive(self, name: str, message: str) -> None:
@@ -128,17 +150,17 @@ The participants are: {', '.join(names)}"""
         name: generate_system_message(name, description, conversation_description)
         for name, description in agent_descriptions.items()
     }
-    solution = {"initial_question":'''A triangle with sides $3a-1$, $a^2 + 1$ and $a^2 + 2$ has a perimeter of 16 units. What is the number of square units in the area of the triangle?''',
-                "answer":"12",
-                "solution":'''"Sum $3a-1$, $a^2+1$, and $a^2+2$ to find $2a^2+3a+2=16$.  Subtract 16 from both sides and factor the left-hand side to find $(2a+7)(a-2)=0\\implies a=-7/2$ or $a=2$.  Discarding the negative solution, we substitute $a=2$ into $3a-1$, $a^2+1$, and $a^2+2$ to find that the side lengths of the triangle are 5, 5, and 6 units.  Draw a perpendicular from the 6-unit side to the opposite vertex to divide the triangle into two congruent right triangles (see figure).  The height of the triangle is $\\sqrt{5^2-3^2}=4$ units, so the area of the triangle is $\\frac{1}{2}(6)(4)=\\boxed{12\\text{ square units}}$.\n\n[asy]\nimport olympiad;\nsize(150);\ndefaultpen(linewidth(0.8)+fontsize(10));\npair A=(0,0), B=(6,0), C=(3,4);\ndraw(A--B--C--cycle);\ndraw(C--(A+B)/2,linetype(\"2 3\"));\nlabel(\"5\",(A+C)/2,unit((-4,3)));\nlabel(\"3\",B/4,S);\ndraw(\"6\",shift((0,-0.6))*(A--B),Bars(5));\ndraw(rightanglemark(A,(A+B)/2,C));[/asy]"
-'''}
+#     solution = {"initial_question":'''A triangle with sides $3a-1$, $a^2 + 1$ and $a^2 + 2$ has a perimeter of 16 units. What is the number of square units in the area of the triangle?''',
+#                 "answer":"12",
+#                 "solution":'''"Sum $3a-1$, $a^2+1$, and $a^2+2$ to find $2a^2+3a+2=16$.  Subtract 16 from both sides and factor the left-hand side to find $(2a+7)(a-2)=0\\implies a=-7/2$ or $a=2$.  Discarding the negative solution, we substitute $a=2$ into $3a-1$, $a^2+1$, and $a^2+2$ to find that the side lengths of the triangle are 5, 5, and 6 units.  Draw a perpendicular from the 6-unit side to the opposite vertex to divide the triangle into two congruent right triangles (see figure).  The height of the triangle is $\\sqrt{5^2-3^2}=4$ units, so the area of the triangle is $\\frac{1}{2}(6)(4)=\\boxed{12\\text{ square units}}$.\n\n[asy]\nimport olympiad;\nsize(150);\ndefaultpen(linewidth(0.8)+fontsize(10));\npair A=(0,0), B=(6,0), C=(3,4);\ndraw(A--B--C--cycle);\ndraw(C--(A+B)/2,linetype(\"2 3\"));\nlabel(\"5\",(A+C)/2,unit((-4,3)));\nlabel(\"3\",B/4,S);\ndraw(\"6\",shift((0,-0.6))*(A--B),Bars(5));\ndraw(rightanglemark(A,(A+B)/2,C));[/asy]"
+# '''}
     agents = []
     for name, system_message in agent_system_messages.items():
         if name == "Evaluator":
             agent = EvaluatorAgent(
                 name=name,
                 system_message=SystemMessage(content=system_message),
-                model=ChatOpenAI(model="gpt-4", temperature=0.2),solution = solution
+                model=ChatOpenAI(model="gpt-4", temperature=0.2)
             )
         else:
             agent = DialogueAgent(
@@ -162,11 +184,33 @@ The participants are: {', '.join(names)}"""
     # simulator.inject("Moderator", specified_topic)
     # print(f"(Moderator): {specified_topic}\n")
     state_all = None
-    while state_all == "FIN":
-    
-    for _ in range(max_iters):
-        name, message = simulator.step()
-        print(f"({name}): {message}\n")
-        if isinstance(simulator.agents[0], EvaluatorAgent):
-           if simulator.agents[0].state == "FIN":
-                break
+    i = 1
+    prob = [MATH_GEO_LOW,MATH_GEO_MIDDLE,MATH_GEO_HARD]
+    while state_all != "FIN":
+        simulator.agents[0].solution = prob[i]
+        simulator.agents[0].state = 'UNC'
+        simulator.agents[0].prev_state = "UNC"
+        for _ in range(max_iters):
+            name, message = simulator.step()
+            print(f"({name}): {message}\n")
+            if isinstance(simulator.agents[0], EvaluatorAgent):
+                if simulator.agents[0].state == "FIN":
+                    if i == len(prob):
+                        state_all = "FIN"
+                        break
+                    elif i == 0 :
+                        state_all = "FIN"
+                        break
+                    else : 
+                        if  simulator.agents[0].status == True:
+                            i+= 1
+                            print("\n\n**New Session (Hard Problem) **\n\n")
+                            break
+                        else:
+
+                            i = i-1
+                            print("\n\n**New Session (Easy Problem) **\n\n")
+                            break
+
+
+

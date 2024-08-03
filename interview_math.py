@@ -123,10 +123,9 @@ The participants are: {', '.join(names)}"""
         name: generate_system_message(name, description, conversation_description)
         for name, description in agent_descriptions.items()
     }
-    solution = {"initial_question":'''A triangle with sides $3a-1$, $a^2 + 1$ and $a^2 + 2$ has a perimeter of 16 units. What is the number of square units in the area of the triangle?''',
-                "answer":"12",
-                "solution":'''"Sum $3a-1$, $a^2+1$, and $a^2+2$ to find $2a^2+3a+2=16$.  Subtract 16 from both sides and factor the left-hand side to find $(2a+7)(a-2)=0\\implies a=-7/2$ or $a=2$.  Discarding the negative solution, we substitute $a=2$ into $3a-1$, $a^2+1$, and $a^2+2$ to find that the side lengths of the triangle are 5, 5, and 6 units.  Draw a perpendicular from the 6-unit side to the opposite vertex to divide the triangle into two congruent right triangles (see figure).  The height of the triangle is $\\sqrt{5^2-3^2}=4$ units, so the area of the triangle is $\\frac{1}{2}(6)(4)=\\boxed{12\\text{ square units}}$.\n\n[asy]\nimport olympiad;\nsize(150);\ndefaultpen(linewidth(0.8)+fontsize(10));\npair A=(0,0), B=(6,0), C=(3,4);\ndraw(A--B--C--cycle);\ndraw(C--(A+B)/2,linetype(\"2 3\"));\nlabel(\"5\",(A+C)/2,unit((-4,3)));\nlabel(\"3\",B/4,S);\ndraw(\"6\",shift((0,-0.6))*(A--B),Bars(5));\ndraw(rightanglemark(A,(A+B)/2,C));[/asy]"
-'''}
+    solution = {"initial_question":'''cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.''',
+                "answer":"2",
+                "solution":'''To determine how long it will take for the cell phone to fully charge, we start by noting the given conditions: The phone recharges at a rate of 1 percentage point every 3 minutes. The current charge level is 60%. First, we calculate the remaining charge needed to reach 100%: 100 % − 60 % = 40 % 100%−60%=40% Next, we determine the time required to recharge this 40% at the given rate of 1% per 3 minutes: Time required = 40 × 3 minutes Time required=40×3 minutes Time required = 120 minutes Time required=120 minutes Now, we convert this time from minutes to hours. Since there are 60 minutes in an hour, we perform the conversion: Time in hours = 120 minutes 60 minutes per hour = 2 hours Time in hours= 60 minutes per hour 120 minutes ​ =2 hours Thus, the time required to fully charge the phone is: 2 hours'''}
     agents = []
     for name, system_message in agent_system_messages.items():
         if name == "Evaluator":
@@ -139,7 +138,7 @@ The participants are: {', '.join(names)}"""
             agent = DialogueAgent(
                 name=name,
                 system_message=SystemMessage(content=system_message),
-                model=ChatOpenAI(model="gpt-4", temperature=0.2),
+                model=ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2),
             )
         agents.append(agent)
 
