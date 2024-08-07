@@ -49,7 +49,7 @@ Model output :
 {model_output}
 Expert feedback:"""
 
-EVALUATOR_STATE_UNCLARIFYING_PROMPT_TEMPLATE ='''Delete some important information from the following question, so that the agent should seek for the additional information
+MODERATOR_STATE_INIT_UNCLARIFYING_PROMPT_TEMPLATE ='''Delete some important information from the following question, so that the agent should seek for the additional information
 ---
 Here are examples. Please follow the format as the following expert acts. Your output must be a json format.
 initial question : cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.
@@ -57,7 +57,7 @@ output : {output_example}
 ---
 initial question : {question}
 output : '''
-EVALUATOR_STATE_EXP_PROMPT_TEMPLATE ='''There's initial question and revised question. Some of information from initial question are deleted to revised question. For the given intial question, revised question and deleted information, You are an Evalautor that answer the evaluatee's questions. The evaluatee's role is to find deleted information. If the evaluatee asks for information that corresponds to the deleted information, provide that information. If the evaluatee asks for information not included in the deleted information, respond that this information is not needed. If the evaluatee tries to solve the problem without asking anything, inform them that the information is needed. If the evaluatee has asked for and found all the information in the deleted information, respond the "Status" with  "complete.". Else, respond the "Status" with "incomplete".
+EVALUATOR_STATE_UNC_PROMPT_TEMPLATE ='''There's initial question and revised question. Some of information from initial question are deleted to revised question. For the given intial question, revised question and deleted information, You are an Evalautor that answer the evaluatee's questions. The evaluatee's role is to find deleted information. If the evaluatee asks for information that corresponds to the deleted information, provide that information. If the evaluatee asks for information not included in the deleted information, respond that this information is not needed. If the evaluatee tries to solve the problem without asking anything, inform them that the information is needed. If the evaluatee has asked for and found all the information in the deleted information, respond the "Status" with  "complete.". Else, respond the "Status" with "incomplete".
 ---
 Here are examples. Please follow the format as the following expert acts. Your output must be a json format.
 {output_example}
@@ -76,7 +76,7 @@ Reference Material : {initial_question}
 Dialogue_History : {Dialogue_History}
 Evalautor : '''
 
-EVALUATOR_STATE_ACTION_PROMPT_TEMPLATE_STEM_LONG = """You are an expert tasked with evaluating and providing feedback on an assistant's performance.
+EVALUATOR_STATE_EXP_PROMPT_TEMPLATE_STEM_LONG = """You are an expert tasked with evaluating and providing feedback on an assistant's performance.
 --- 
 current status is "False".
 Your response should contain feedback if there's something wrong with the given reference solution. Rather than giving away the solution, tell which step is incorrect and encourage them to solve it once more. If there are missing facts compared with the reference solution, ask in-depth questions about the facts that are in the solution. If you ask for all of the missing facts and give all of the feedback, return the status as "True." 
@@ -125,7 +125,7 @@ Question: {initial_question}'''
 def PromptGenerator(state,solution,message_history):
     if state == 'UNC':
         output_examples = '''{"revised_question" : "The cell-phone recharges at a certain rate. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.","deleted_information" : "cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes."}'''
-        prompt = EVALUATOR_STATE_UNCLARIFYING_PROMPT_TEMPLATE.format( output_example = output_examples, question=solution['initial_question'].replace('{','').replace('}','').replace('"',"'"))
+        prompt = MODERATOR_STATE_INIT_UNCLARIFYING_PROMPT_TEMPLATE.format( output_example = output_examples, question=solution['initial_question'].replace('{','').replace('}','').replace('"',"'"))
              
     elif state == 'EXP':
         output_examples = '''initial_question : cell-phone recharges at the rate of 1 percentage-point of charge per 3 minutes. Now, the phone is at 60% charged. How long will it take to fully charge, in hours? Solution output format: an integer.
@@ -134,7 +134,7 @@ deleted_information : ["cell-phone recharges at the rate of 1 percentage-point o
 Dialogue_History : ["Evalautee : What is cell-phone recharging rate ?"]
 Evalautor : {"answer" : "The recharging rate is 1 percentage-point of charge per 3 minutes",
 "status" : "Complete"}'''
-        prompt =     EVALUATOR_STATE_EXP_PROMPT_TEMPLATE.format(  output_example = output_examples, initial_question=solution['initial_question'],
+        prompt =     EVALUATOR_STATE_UNC_PROMPT_TEMPLATE.format(  output_example = output_examples, initial_question=solution['initial_question'],
             revised_question=solution['revised_question'],
             deleted_information=solution['deleted_information'],
             Dialogue_History=message_history)

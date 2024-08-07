@@ -179,7 +179,7 @@ The participants are: {', '.join(names)}"""
     # specified_topic = ChatOpenAI(temperature=1.0).invoke(topic_specifier_prompt).content
 
     max_iters = 20
-    simulator = DialogueSimulator(agents=agents, selection_function=select_next_speaker)
+    simulator = DalogueSimulator(agents=agents, selection_function=select_next_speaker)
     simulator.reset()
     # simulator.inject("Moderator", specified_topic)
     # print(f"(Moderator): {specified_topic}\n")
