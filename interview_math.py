@@ -155,6 +155,7 @@ The participants are: {', '.join(names)}"""
     simulator.reset()
     # simulator.inject("Moderator", specified_topic)
     # print(f"(Moderator): {specified_topic}\n")
+    import pdb;pdb.set_trace()
     for _ in range(max_iters):
         name, message = simulator.step()
         print(f"({name}): {message}\n")
