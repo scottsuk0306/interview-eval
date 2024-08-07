@@ -37,7 +37,7 @@ class EvaluatorAgent:
     def reset(self):
         self.message_history = ["Here is the conversation so far."]
 
-    def send(self) -> str:
+    def send(self,self.state) -> str:
         state_prompt = f"Current state: {self.state}\n"
         try:
             prompt = PromptGenerator(self.state,self.solution,self.message_history)
